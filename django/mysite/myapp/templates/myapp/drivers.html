@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<head>
+    <meta charset = "UTF-8">
+    <title> Водители </title>
+    <style>
+        table {
+            font-family: Arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Водители</h1>
+    <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+        {% if student.is_expelled %}
+        <button type="submit" name="reactivate_student">Восстановить студента</button>
+        {% endif %}
+    </form>
+
+    <br />
+    <table>
+        <tr>
+            <th>Имя</th>
+        </tr>
+        {% for obj in objects %}
+        <tr>
+            <td>{{ obj.name }}</td>
+
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+<html>
