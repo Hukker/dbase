@@ -1,65 +1,64 @@
+from dataclasses import fields
 from django import forms
 from .models import *
-
-
-class BrigadeForm(forms.ModelForm):
-    feldsher = forms.ModelChoiceField(queryset=Feldshers.objects.all(), label='Фельдшер', empty_label='')
-    med = forms.ModelChoiceField(queryset=Meds.objects.all(), label='Медик', empty_label='')
-    driver = forms.ModelChoiceField(queryset=Drivers.objects.all(), label='Водитель', empty_label='')
-    car = forms.ModelChoiceField(queryset=Cars.objects.all(), label='Машина', empty_label='')
-    worktimestart = forms.TimeField(label='Время начала приема',widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
-    worktimeend = forms.TimeField(label='Время конца приема',widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
-    busy = forms.BooleanField(label='В работе',widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),required=False)
-    number = forms.ModelChoiceField(queryset = BrigadeNumber.objects.all(),label = 'номер бригады')
+    
+class WorkersForm(forms.ModelForm):
+    person = forms.ModelChoiceField(queryset=Workers.objects.all().order_by('name'), label='сотрудник')
+    startvacition = forms.DateField(label='дата начала отпуска')
+    endvacition = forms.DateField(label='дата окончания отпуска')
+    startsickness = forms.DateField(label='дата начала болезни')
+    endsickness = forms.DateField(label='дата окончания болезни')
+    endwork = forms.DateField(label='дата окончания работы')
 
     class Meta:
-        model = Brigade
-        fields = '__all__'
-
-
-class FeldshersForm(forms.ModelForm):
-    name = forms.CharField(label='Фельдшер')
-
-
-    class Meta:
-        model = Feldshers
-        fields = '__all__'
-
-
-class MedsForm(forms.ModelForm):
-    name = forms.CharField( label='Медик')
-
-    class Meta:
-        model = Meds
-        fields = '__all__'
-
-
-class DriverForm(forms.ModelForm):
-    name = forms.CharField(label='Водитель')
-
-    class Meta:
-        model = Drivers
-        fields = '__all__'
-
-
-class ReportForms(forms.ModelForm):
-    symptom = forms.CharField(label= 'симптомы')
-    name=forms.CharField(max_length=255,label='имя',widget=forms.TextInput(attrs={'class': 'form-control'}))
-    adress = forms.CharField(max_length=255,label='адресс')
-    brigade = forms.ModelChoiceField(queryset=Brigade.objects.all(),label='бригада')
-    result = forms.CharField(max_length=255,label='диагноз')
-    year = forms.IntegerField(label ='год рождения', min_value=1924,max_value=2024)
-
-    class Meta:
-        model = Report
-        fields = '__all__'
-
+        model = WorkersInfo
+        fields = ['person', 'startvacition', 'endvacition', 'startsickness', 'endsickness', 'endwork']        
+        
 
 class CarsForm(forms.ModelForm):
-    type = forms.ModelChoiceField(queryset=TypeCars.objects.all(),label ='тип автомобиля')
-    number = forms.CharField(max_length=255,label='автомобильный номер')
-    mark = forms.CharField(max_length=255,label='марка автомобиля')
+    TYPES_CHOICES = (
+        ('реанимация', 'реанимация'),
+        ('обычная', 'обычная'),
+    )
+    
+    type = forms.ChoiceField(choices=TYPES_CHOICES, label='тип автомобиля')
+    number = forms.CharField(max_length=255, label='автомобильный номер')
+    mark = forms.CharField(max_length=255, label='марка автомобиля')
 
     class Meta:
         model = Cars
         fields = '__all__'
+        
+
+class DeleteCarForm(forms.Form):
+    car_id = forms.IntegerField(min_value=1, label='номер автомобиля')
+    
+    
+class BrigadeForm(forms.ModelForm):
+    worktimestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
+    worktimeend = forms.TimeField(label='Время конца приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
+
+
+    class Meta:
+        model = Brigade
+        fields = ['worktimestart','worktimeend']
+        
+        
+class ReportForm(forms.ModelForm):
+    RESULTS_CHOICES = (
+        ('умер', 'умер'),
+        ('везем в больницу', 'везем в больницу'),
+        ('оказано лечение', 'оказано лечение'),
+    )
+    
+    symptom = forms.CharField(label='симптомы')
+    name = forms.CharField(max_length=255, label='имя')
+    adress = forms.CharField(max_length=255, label='адресс')
+    year = forms.IntegerField(label='год рождения', min_value=1924, max_value=2024)
+    brigade = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('worktimestart'), label='бригада')
+    result = forms.ChoiceField(choices=RESULTS_CHOICES, label='диагноз')
+    timestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = Report
+        fields = ['name', 'adress', 'symptom', 'brigade', 'result', 'timestart', 'year']

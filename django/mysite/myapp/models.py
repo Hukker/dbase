@@ -1,62 +1,94 @@
 from django.db import models
 from django.forms import ValidationError
-
-class Feldshers(models.Model):
-    name = models.CharField(max_length=255, null=True)
+    
+class Workers(models.Model):
+    STATUS_CHOICES = (
+        ('фельдшер', 'фельдшер'),
+        ('медсестра', 'медсестра'),
+        ('водитель', 'водитель'),
+    )
+    
+    name = models.CharField(max_length=255)
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES)
+    info = models.ForeignKey('WorkersInfo', on_delete=models.CASCADE)
     def __str__(self):
-        return f"{self.name} "
+        return self.name
 
-class Meds(models.Model):
-    name = models.CharField(max_length=255, null=True)
-    def __str__(self):
-        return f"{self.name} "
-
-class Drivers(models.Model):
-    name = models.CharField(max_length=255, null=True)
-    def __str__(self):
-        return str(self.name)
-
-
-class BrigadeNumber(models.Model):
-    number = models.CharField(max_length=255, null=True)
-    def __str__(self):
-        return self.number
+class WorkersInfo(models.Model):
+    startwork = models.DateField(max_length=255)
+    startsickness = models.DateField(null=True, max_length=255)
+    startvacition = models.DateField(null=True, max_length=255)
+    endvacition = models.DateField(null=True, max_length=255)
+    endsickness = models.DateField(null=True, max_length=255)
+    endwork = models.DateField(null=True, max_length=255)
 
 
 class Brigade(models.Model):
-   feldsher = models.ForeignKey(Feldshers, on_delete=models.DO_NOTHING, null=True)
-   med = models.ForeignKey(Meds, on_delete=models.DO_NOTHING, null=True)
-   driver = models.ForeignKey(Drivers, on_delete=models.DO_NOTHING, null=True)
-   car = models.ForeignKey('Cars', on_delete=models.DO_NOTHING, null=True)
-   worktimestart = models.CharField(max_length=255, null=True)
-   worktimeend = models.CharField(max_length=255, null=True)
-   busy = models.BooleanField(default=False)
-   number = models.ForeignKey(BrigadeNumber, on_delete=models.DO_NOTHING, null=True)
+    feldsher = models.ForeignKey(
+        Workers,
+        on_delete=models.DO_NOTHING,
+        limit_choices_to={'status': 'фельдшер'},
+        related_name='feldsher_brigades'  # Имя для обратной связи с фельдшерами
+    )
+    med = models.ForeignKey(
+        Workers,
+        on_delete=models.DO_NOTHING,
+        limit_choices_to={'status': 'медсестра'},
+        related_name='med_brigades'  # Имя для обратной связи с медсестрами
+    )
+    driver = models.ForeignKey(
+        Workers,
+        on_delete=models.DO_NOTHING,
+        limit_choices_to={'status': 'водитель'},
+        related_name='driver_brigades'  # Имя для обратной связи с водителями
+    )
+    
+    car = models.ForeignKey('Cars', on_delete=models.DO_NOTHING)
+    
+    worktimestart = models.TimeField(max_length=255)
+    worktimeend = models.TimeField(max_length=255)
 
-   def __str__(self):
+    number = models.CharField(max_length=255)
+
+    def __str__(self):
        return str(self.driver)
 
 
+
 class Report(models.Model):
-   symptom = models.CharField(max_length=255, null=True)
-   name = models.CharField(max_length=255, null=True)
-   adress = models.CharField(max_length=255, null=True)
-   brigade = models.ForeignKey(BrigadeNumber, on_delete=models.DO_NOTHING, null=True)
-   result = models.CharField(max_length=255, null=True)
-   year = models.CharField(max_length=255, null=True)
+    RESULTS_CHOICES = (
+        ('умер', 'умер'),
+        ('везем в больницу', 'везем в больницу'),
+        ('оказано лечение', 'оказано лечение'),
+    )
+    
+    symptom = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    adress = models.CharField(max_length=255)
+    
+    brigade = models.ForeignKey(Brigade, on_delete=models.DO_NOTHING)
+    
+    result = models.CharField(max_length=255, choices = RESULTS_CHOICES)
+    
+    timestart = models.TimeField(max_length=255)
+    year = models.IntegerField()
 
 
 class Cars(models.Model):
-    type = models.ForeignKey('TypeCars', on_delete=models.DO_NOTHING)
+    TYPES_CHOICES = (
+        ('реанимация', 'реанимация'),
+        ('обычная', 'обычная'),
+    )
+    type = models.CharField(max_length=255, choices=TYPES_CHOICES)
     number = models.CharField(max_length=255)
     mark = models.CharField(max_length=255)
 
-
-class TypeCars(models.Model):
-    type=models.CharField(max_length=255)
     def __str__(self):
-        return self.type
-
-
-
-
+        return self.mark
+    
+class RelutsInsepctions(models.Model):
+    person = models.ForeignKey(Report, on_delete=models.DO_NOTHING)
+    result = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return self.person
