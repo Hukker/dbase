@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<head>
+    <meta charset = "UTF-8">
+    <title> Вызовы </title>
+    <style>
+        table {
+            font-family: Arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <!-- Подключение библиотеки jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Подключение библиотеки jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <!-- Подключение стилей jQuery UI для виджета времени -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script>
+        $(function() {
+            // Инициализация виджета времени для полей с классом form-control
+            $('.form-control').timepicker({
+                timeFormat: 'HH:mm', // Указываем формат времени
+                interval: 15, // Интервал времени
+                minTime: '00:00', // Минимальное время
+                maxTime: '23:45', // Максимальное время
+                defaultTime: '00:00', // Время по умолчанию
+                startTime: '00:00', // Начальное время
+                dynamic: false,
+                dropdown: true,
+                scrollbar: true
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <h1>Вызовы</h1>
+    <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <h2> Поиск по годам</h2>
+    <form method="GET">
+        {%  csrf_token %}
+        <input type="number" name="search" value="{{ search_query }}">
+        <button type="submit">Поиск</button>
+    </form>
+
+    <br />
+    <table>
+        <tr>
+            <th>Имя</th>
+            <th>Адресс</th>
+            <th>Симптомы</th>
+            <th>Бригада</th>
+            <th>Результат</th>
+            <th>Время начала</th>
+            <th>Год исполнения</th>
+        </tr>
+        {% for obj in objects %}
+        <tr>
+            <td>{{ obj.name }}</td>
+            <td>{{ obj.adress }}</td>
+            <td>{{ obj.symptom }}</td>
+            <td>{{ obj.brigade }}</td>
+            <td>{{ obj.result }}</td>
+            <td>{{ obj.timestart }}</td>
+            <td>{{ obj.year }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+<html>
