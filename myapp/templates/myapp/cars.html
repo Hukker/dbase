@@ -29,17 +29,19 @@
     <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
 
     <h2>Добавить машину</h2>
-    <form action = "" method = "post">
-        {%  csrf_token %}
+    <form action="" method="post">
+        {% csrf_token %}
         {{ form.as_p }}
-        <input type = "submit" value = "Добавить" />
+        <input type="hidden" name="action" value="add">
+        <input type="submit" value="Добавить">
     </form>
 
     <h2>Удалить машину</h2>
     <form action="" method="post">
         {% csrf_token %}
         {{ delete_form.as_p }}
-        <input type="submit" value="Удалить" />
+        <input type="hidden" name="action" value="delete">
+        <input type="submit" value="Удалить">
     </form>
 
     <br />

@@ -124,7 +124,7 @@ def run_experiments(db_name):
     elif db_name == '100000.sqlite3':
         num_records = random.randint(1, 100000)
     
-    #add_workers_group(c, num_records)
+    add_workers_group(c, num_records)
 
     key_id = random.randint(1, num_records)  # Generate a random ID within the range of existing IDs
     specific_name = "specific_name"

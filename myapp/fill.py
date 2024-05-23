@@ -31,7 +31,7 @@ class Data():
             "Заболевания органов пищеварительной системы.",
             ]
         
-        for _ in range(100000):
+        for _ in range(1000):
             Workers.objects.create(
                 name=fake.name(),
                 status=random.choice(['фельдшер', 'медсестра', 'водитель']),

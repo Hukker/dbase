@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Бригады</title>
-     <style>
+    <style>
         table {
             font-family: Arial, sans-serif;
             border-collapse: collapse;
@@ -54,14 +54,6 @@
     <h1>Бригады</h1>
     <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
 
-
-
-    <form action = "" method = "post">
-        {%  csrf_token %}
-        {{ form.as_p }}
-        <input type = "submit" value = "Добавить" />
-    </form>
-    <br />
 
     <h2> Поиск бригад на вызове</h2>
     <form method="GET">
