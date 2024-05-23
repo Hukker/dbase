@@ -1,19 +1,50 @@
 from dataclasses import fields
+import datetime
 from django import forms
 from .models import *
     
 class WorkersForm(forms.ModelForm):
     person = forms.ModelChoiceField(queryset=Workers.objects.all().order_by('name'), label='сотрудник')
-    startvacition = forms.DateField(label='дата начала отпуска')
-    endvacition = forms.DateField(label='дата окончания отпуска')
-    startsickness = forms.DateField(label='дата начала болезни')
-    endsickness = forms.DateField(label='дата окончания болезни')
-    endwork = forms.DateField(label='дата окончания работы')
+    startvacition = forms.DateField(
+        label='дата начала отпуска', required=False,
+        input_formats=['%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d']
+    )
+    endvacition = forms.DateField(
+        label='дата окончания отпуска', required=False,
+        input_formats=['%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d']
+    )
+    startsickness = forms.DateField(
+        label='дата начала болезни', required=False,
+        input_formats=['%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d']
+    )
+    endsickness = forms.DateField(
+        label='дата окончания болезни', required=False,
+        input_formats=['%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d']
+    )
+    endwork = forms.DateField(
+        label='дата окончания работы', required=False,
+        input_formats=['%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d']
+    )
+    
 
     class Meta:
         model = WorkersInfo
         fields = ['person', 'startvacition', 'endvacition', 'startsickness', 'endsickness', 'endwork']        
         
+    def save(self, commit=True):
+        worker = self.cleaned_data['person']
+        worker.info.startvacition = self.cleaned_data.get('startvacition')
+        worker.info.endvacition = self.cleaned_data.get('endvacition')
+        worker.info.startsickness = self.cleaned_data.get('startsickness')
+        worker.info.endsickness = self.cleaned_data.get('endsickness')
+        worker.info.endwork = self.cleaned_data.get('endwork')
+
+        if commit:
+            worker.info.save()
+            worker.save()
+        
+        return worker
+
 
 class CarsForm(forms.ModelForm):
     TYPES_CHOICES = (
@@ -22,8 +53,8 @@ class CarsForm(forms.ModelForm):
     )
     
     type = forms.ChoiceField(choices=TYPES_CHOICES, label='тип автомобиля')
-    number = forms.ModelChoiceField(queryset=Cars.objects.all().order_by('number'), label='номер автомобиля')
-    mark = forms.ModelChoiceField(queryset=Cars.objects.all().order_by('mark'), label='марка автомобиля')
+    number = forms.CharField( label='номер автомобиля')
+    mark = forms.CharField(label='марка автомобиля')
 
     class Meta:
         model = Cars
@@ -35,7 +66,7 @@ class DeleteCarForm(forms.Form):
     
     
 class BrigadeForm(forms.ModelForm):
-    number = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('worktimestart'), label='номер бригады')
+    number = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('number'), label='номер бригады')
     worktimestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
     worktimeend = forms.TimeField(label='Время конца приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
 
@@ -55,8 +86,8 @@ class ReportForm(forms.ModelForm):
     symptom = forms.CharField(label='симптомы')
     name = forms.CharField(max_length=255, label='имя')
     adress = forms.CharField(max_length=255, label='адресс')
-    year = forms.IntegerField(label='год рождения', min_value=1924, max_value=2024)
-    brigade = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('worktimestart'), label='бригада')
+    year = forms.IntegerField(label='год исполнения', min_value=1924, max_value=2024)
+    brigade = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('number'), label='бригада')
     result = forms.ChoiceField(choices=RESULTS_CHOICES, label='диагноз')
     timestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
 
