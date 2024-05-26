@@ -69,6 +69,7 @@ class Data():
                 med = random.choice(Workers.objects.filter(status='медсестра')),
                 driver = random.choice(Workers.objects.filter(status='водитель')),
                 car = random.choice(Cars.objects.all()),
+                date = fake.date(),
                 worktimestart = fake.time(),
                 worktimeend = fake.time(),
                 number = i+1,
