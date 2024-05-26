@@ -7,20 +7,31 @@ class Workers(models.Model):
         ('медсестра', 'медсестра'),
         ('водитель', 'водитель'),
     )
-    
+
     name = models.CharField(max_length=255)
+
     status = models.CharField(max_length=255, choices=STATUS_CHOICES)
-    info = models.ForeignKey('WorkersInfo', on_delete=models.CASCADE)
+
+    startwork = models.DateField()
+
+    endwork = models.DateField(null=True)
+
     def __str__(self):
         return self.name
 
-class WorkersInfo(models.Model):
-    startwork = models.DateField(max_length=255)
-    startsickness = models.DateField(null=True, max_length=255)
-    startvacition = models.DateField(null=True, max_length=255)
-    endvacition = models.DateField(null=True, max_length=255)
-    endsickness = models.DateField(null=True, max_length=255)
-    endwork = models.DateField(null=True, max_length=255)
+class WorkerIllness(models.Model):
+
+    startsickness = models.DateField()
+
+    endsickness = models.DateField(null=True)
+
+class WorkerHistory(models.Model):
+    worker = models.ForeignKey(Workers, on_delete=models.DO_NOTHING)
+    illness_info = models.ForeignKey(WorkerIllness, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return self.worker.name
 
 
 class Brigade(models.Model):
@@ -48,7 +59,7 @@ class Brigade(models.Model):
     worktimestart = models.TimeField(max_length=255)
     worktimeend = models.TimeField(max_length=255)
 
-    number = models.CharField(max_length=255)
+    number = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.number
@@ -71,7 +82,7 @@ class Report(models.Model):
     result = models.CharField(max_length=255, choices = RESULTS_CHOICES)
     
     timestart = models.TimeField(max_length=255)
-    year = models.IntegerField()
+    date = models.DateField(max_length=255)
 
 
 class Cars(models.Model):
@@ -82,6 +93,9 @@ class Cars(models.Model):
     type = models.CharField(max_length=255, choices=TYPES_CHOICES)
     number = models.CharField(max_length=255)
     mark = models.CharField(max_length=255)
+    datestart = models.DateField(max_length=255)
+    dateend = models.DateField(max_length=255, null=True)
+    
 
     def __str__(self):
         return self.mark

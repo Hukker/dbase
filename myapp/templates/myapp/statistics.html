@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Бригады</title>
+    <style>
+        table {
+            font-family: Arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Бригады статистика</h1>
+    <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
+
+
+    <h2> Поиск Количествам смертей</h2>
+    <form method="GET">
+        {% csrf_token %}
+        <input type="number" name="search" value="{{ search_query }}">
+        <button type="submit">Поиск</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>Фельдшер</th>
+            <th>Медик</th>
+            <th>Водитель</th>
+            <th>Машина</th>
+            <th>Время начала</th>
+            <th>Время окончание</th>
+            <th>Количество смертельных вызовов</th>
+        </tr>
+        {% for obj in objects %}
+        <tr>
+            <td>{{ obj.feldsher }}</td>
+            <td>{{ obj.med }}</td>
+            <td>{{ obj.driver }}</td>
+            <td>{{ obj.car }}</td>
+            <td>{{ obj.worktimestart }}</td>
+            <td>{{ obj.worktimeend }}</td>
+            <td>{{ obj.death_calls_count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
