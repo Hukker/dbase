@@ -56,6 +56,7 @@ class Brigade(models.Model):
     
     car = models.ForeignKey('Cars', on_delete=models.DO_NOTHING)
     
+    date = models.DateField(max_length=255)
     worktimestart = models.TimeField(max_length=255)
     worktimeend = models.TimeField(max_length=255)
 

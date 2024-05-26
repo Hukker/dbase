@@ -47,16 +47,73 @@
             });
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            $('#date').on('change', function() {
+                var selectedDate = $(this).val();
+                $.ajax({
+                    type: 'GET',
+                    url: '/get_brigades/',
+                    data: {
+                        'selected_date': selectedDate
+                    },
+                    success: function(response) {
+                        // Clear existing options
+                        $('#brigade').empty();
+                        // Populate options with retrieved data
+                        $.each(response.brigades, function(key, value) {
+                            $('#brigade').append($('<option></option>').attr('value', key).text(value));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
 
 </head>
 <body>
     <h1>Вызовы</h1>
     <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Сохранить</button>
+    <form id="reportForm">
+        <div class="form-group">
+            <label for="symptom">Symptoms:</label>
+            <input type="text" id="symptom" name="symptom">
+        </div>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+        </div>
+        <div class="form-group">
+            <label for="adress">Address:</label>
+            <input type="text" id="adress" name="adress">
+        </div>
+        <div class="form-group">
+            <label for="date">Execution Date:</label>
+            <input type="date" id="date" name="date">
+        </div>
+        <div class="form-group">
+            <label for="brigade">Brigade:</label>
+            <select id="brigade" name="brigade">
+                <!-- Brigade options will be populated dynamically -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="result">Diagnosis:</label>
+            <select id="result" name="result">
+                <option value="умер">умер</option>
+                <option value="везем в больницу">везем в больницу</option>
+                <option value="оказано лечение">оказано лечение</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="timestart">Start Time:</label>
+            <input type="time" id="timestart" name="timestart">
+        </div>
+        <button type="submit">Submit</button>
     </form>
 
     <h2> Поиск по годам</h2>

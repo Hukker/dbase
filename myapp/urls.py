@@ -1,4 +1,6 @@
 from . import views
+from .views import get_brigades
+
 
 from django.urls import path
 
@@ -12,5 +14,6 @@ urlpatterns = [
     path('statistics', views.statistics, name='badbrigades'),
     path('all_workers_illness_history', views.all_workers_illness_history, name='all_workers_illness_history'),
     path('fill', views.fill, name='fill'),
+    path('get_brigades/', get_brigades, name='get_brigades'),
 ]   
 

@@ -61,17 +61,6 @@ class CarsForm(forms.ModelForm):
 
 
 
-class BrigadeForm(forms.ModelForm):
-    number = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('number'), label='номер бригады')
-    worktimestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
-    worktimeend = forms.TimeField(label='Время конца приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
-
-
-    class Meta:
-        model = Brigade
-        fields = ['number', 'worktimestart','worktimeend']
-        
-        
 class ReportForm(forms.ModelForm):
     RESULTS_CHOICES = (
         ('умер', 'умер'),
@@ -85,8 +74,8 @@ class ReportForm(forms.ModelForm):
     date = forms.DateField(label='дата исполнения', widget=forms.DateInput(attrs={'type': 'date'}))
     brigade = forms.ModelChoiceField(queryset=Brigade.objects.all().order_by('number'), label='бригада')
     result = forms.ChoiceField(choices=RESULTS_CHOICES, label='диагноз')
-    timestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(format='%H:%M', attrs={'class': 'form-control'}))
+    timestart = forms.TimeField(label='Время начала приема', widget=forms.TimeInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = Report
-        fields = ['timestart', 'date', 'name', 'adress', 'symptom', 'brigade', 'result']
+        fields = ['date', 'timestart', 'name', 'adress', 'symptom', 'brigade', 'result']

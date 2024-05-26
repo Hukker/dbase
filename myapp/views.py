@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from myapp.models import *
 from myapp.forms import *
 from itertools import count
@@ -41,8 +41,8 @@ def cars(request):
     return render(request, 'myapp/cars.html', {'objects': objects, 'form': form})
 
 def brigades(request):
-    objects = Brigade.objects.all().order_by('worktimestart')
-    form = BrigadeForm()
+    objects = Brigade.objects.all().order_by('date')
+
     search_query = request.GET.get('search', '')
 
     if search_query:
@@ -55,17 +55,17 @@ def brigades(request):
         except ValueError:
             pass  # If the search query is not in the correct format, don't filter
 
-    if (request.method == 'POST'):
-        form = BrigadeForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Brigade saved')
-        else:
-            messages.error(request, 'Ошибка валидации. Проверьте введенные данные.')
-        form = BrigadeForm()
-        
-        
-    return render(request, 'myapp/brigade.html', {'objects': objects, 'form': form, 'search_query': search_query})
+
+    return render(request, 'myapp/brigade.html', {'objects': objects, 'search_query': search_query})
+
+def get_brigades(request):
+    selected_date = request.GET.get('selected_date')
+    if selected_date:
+        brigades = Brigade.objects.filter(date=selected_date).order_by('number').values_list('pk', flat=True)
+        data = {'brigades': list(brigades)}
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'error': 'Selected date is required'})
 
 def reports(request):
     objects = Report.objects.all().order_by('date')
