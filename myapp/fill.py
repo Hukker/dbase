@@ -31,22 +31,38 @@ class Data():
             "Заболевания органов пищеварительной системы.",
             ]
         
-        for _ in range(1000):
+        for _ in range(100):
             Workers.objects.create(
                 name=fake.name(),
                 status=random.choice(['фельдшер', 'медсестра', 'водитель']),
-                info=WorkersInfo.objects.create(
-                    startwork=fake.date(),
-                )
+                startwork=fake.date(),
+                endwork=fake.date() if random.random() < 0.5 else None,
             )
             
+            
+        for _ in range(30):  # Assuming 30 workers have illness history
+            worker = random.choice(Workers.objects.all())
+            startsickness = fake.date()
+            endsickness = fake.date() if random.random() < 0.5 else None
+            illness = WorkerIllness.objects.create(
+                startsickness=startsickness,
+                endsickness=endsickness,
+            )
+            WorkerHistory.objects.create(
+                worker=worker,
+                illness_info=illness,
+            )
+        
         for _ in range(100):
+            dateend = fake.date() if random.random() < 0.5 else None
             Cars.objects.create(
-                type = random.choice(['реанимация', 'обычная']),
-                number = fake.bothify(text='???###'),
-                mark = fake.bothify(text='???###'),
+                type=random.choice(['реанимация', 'обычная']),
+                number=fake.bothify(text='???###'),
+                mark=fake.bothify(text='???###'),
+                datestart=fake.date(),
+                dateend=dateend
             )
-            
+                    
         for i in range(100):
             Brigade.objects.create(
                 feldsher = random.choice(Workers.objects.filter(status='фельдшер')),
@@ -66,7 +82,7 @@ class Data():
                 brigade = random.choice(Brigade.objects.all()),
                 result = random.choice(['умер', 'везем в больницу', 'оказано лечение']),
                 timestart = fake.time(),
-                year = random.randint(2000, 2024),
+                date = fake.date(),
             )
             
         for _ in range(100):

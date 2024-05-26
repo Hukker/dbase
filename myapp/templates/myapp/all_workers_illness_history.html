@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Workers Illness History</title>
+    <style>
+        table {
+            font-family: Arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Workers and Their Illness History</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Начало болезни</th>
+                <th>Конец болезни</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in objects %}
+            <tr>
+                <tr>
+                    <td>{{ obj.worker.name }}</td>
+                    <td>{{ obj.illness_info.startsickness }}</td>
+                    <td>{{ obj.illness_info.endsickness }}</td>
+                </tr>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</body>
+</html>

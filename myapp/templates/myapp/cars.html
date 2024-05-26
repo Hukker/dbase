@@ -36,26 +36,22 @@
         <input type="submit" value="Добавить">
     </form>
 
-    <h2>Удалить машину</h2>
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ delete_form.as_p }}
-        <input type="hidden" name="action" value="delete">
-        <input type="submit" value="Удалить">
-    </form>
-
     <br />
     <table>
         <tr>
             <th>Тип</th>
             <th>Номер</th>
             <th>Марка</th>
+            <th>Принято</th>
+            <th>Списано</th>
         </tr>
         {% for obj in objects %}
         <tr>
             <td>{{ obj.type }}</td>
             <td>{{ obj.number }}</td>
             <td>{{ obj.mark }}</td>
+            <td>{{ obj.datestart }}</td>
+            <td>{{ obj.dateend }}</td>
         </tr>
         {% endfor %}
     </table>

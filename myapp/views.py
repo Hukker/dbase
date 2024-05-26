@@ -16,25 +16,14 @@ def index(request):
 
 def workers(request):
     objects = Workers.objects.all().order_by('name')
-    form = WorkersForm()
-    
-    if (request.method == 'POST'):
-        form = WorkersForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Worker saved')
-        else:
-            messages.error(request, 'Ошибка валидации. Проверьте введенные данные.')
-        form = WorkersForm()
         
         
-    return render(request, 'myapp/workers.html', {'objects': objects, 'form': form})
+    return render(request, 'myapp/workers.html', {'objects': objects})
 
 
 def cars(request):
     objects = Cars.objects.all().order_by('id')
     form = CarsForm()
-    delete_form = DeleteCarForm()
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -48,16 +37,8 @@ def cars(request):
             else:
                 messages.error(request, 'Ошибка валидации. Проверьте введенные данные.')
 
-        elif action == 'delete':  # Если отправлена форма удаления
-            delete_form = DeleteCarForm(request.POST)
-            if delete_form.is_valid():
-                car_id = delete_form.cleaned_data['car_id']
-                car = Cars.objects.get(pk=car_id)
-                car.delete()
-                messages.success(request, 'Машина успешно удалена')
-                return redirect('cars')  # Перенаправляем на страницу снова после успешного удаления
 
-    return render(request, 'myapp/cars.html', {'objects': objects, 'form': form, 'delete_form': delete_form})
+    return render(request, 'myapp/cars.html', {'objects': objects, 'form': form})
 
 def brigades(request):
     objects = Brigade.objects.all().order_by('worktimestart')
@@ -87,13 +68,13 @@ def brigades(request):
     return render(request, 'myapp/brigade.html', {'objects': objects, 'form': form, 'search_query': search_query})
 
 def reports(request):
-    objects = Report.objects.all().order_by('year')
-    form = ReportForm
+    objects = Report.objects.all().order_by('date')
+    form = ReportForm()
     search_query = request.GET.get('search', '')
 
     if search_query:
         objects = objects.filter(
-            Q(year__icontains=search_query)
+            Q(date__icontains=search_query)
         )
 
 
@@ -109,15 +90,39 @@ def reports(request):
     return render(request, 'myapp/reports.html', {'objects': objects, 'form': form, 'search_query': search_query,})
 
 
-def badbrigades(request):
-    objects = Brigade.objects.annotate(death_calls_count=Count('report', filter=Q(report__result='умер'))).filter(death_calls_count__gt=5)
-    #objects = Brigade.objects.all().order_by('worktimestart')
-    return render(request, 'myapp/badbrigades.html', {'objects': objects})
+def statistics(request):
+    objects = Brigade.objects.annotate(
+        death_calls_count=Count('report', filter=Q(report__result='умер')),
+    ).order_by('worktimestart')
+    
+    
+    
+    search_query = request.GET.get('search', '')
 
-def goodbrigades(request):
-    objects = Brigade.objects.annotate(death_calls_count=Count('report', filter=Q(report__result='умер'))).filter(death_calls_count__lt=5)
-    #objects = Brigade.objects.all().order_by('worktimestart')
-    return render(request, 'myapp/goodbrigades.html', {'objects': objects})
+    if search_query:
+        objects = objects.filter(
+            Q(death_calls_count=search_query)
+        )
+        
+    return render(request, 'myapp/statistics.html', {'objects': objects, 'search_query': search_query})
+
+def all_workers_illness_history(request):
+    
+    objects = WorkerHistory.objects.all().order_by('worker__name')
+
+    form = WorkersForm()
+    
+    if (request.method == 'POST'):
+        form = WorkersForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Worker saved')
+        else:
+            messages.error(request, 'Ошибка валидации. Проверьте введенные данные.')
+        form = WorkersForm()
+        
+    return render(request, 'myapp/all_workers_illness_history.html', {'objects': objects, 'form': form})
+
 
 def fill(request):
     data = Data()

@@ -28,11 +28,6 @@
     <h1>Работники</h1>
     <button class="button"><a href="index" style="color: inherit; text-decoration: none;">Вернуться назад</a></button>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Сохранить</button>
-    </form>
 
     <br />
     <table>
@@ -40,25 +35,19 @@
             <th>Имя</th>
             <th>Статус</th>
             <th>Дата начала работы</th>
-            <th>Дата начала болезни</th>
-            <th>Дата окончания болезни</th>
-            <th>Дата начала отпуска</th>
-            <th>Дата окончания отпуска</th>
             <th>Дата окончания работы</th>
         </tr>
         {% for worker in objects %}
         <tr>
             <td>{{ worker.name }}</td>
             <td>{{ worker.status }}</td>
-            <td>{{ worker.info.startwork }}</td>
-            <td>{{ worker.info.startsickness }}</td>
-            <td>{{ worker.info.endsickness }}</td>
-            <td>{{ worker.info.startvacition }}</td>
-            <td>{{ worker.info.endvacition }}</td>
-            <td>{{ worker.info.endwork }}</td>
+            <td>{{ worker.startwork }}</td>
+            <td>{{ worker.endwork }}</td>
         </tr>
         {% endfor %}
     </table>
+    
+    
     
 </body>
 <html>
