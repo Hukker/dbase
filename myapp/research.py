@@ -1,206 +1,149 @@
 import sqlite3
 import random
+import string
+import timeit
 import time
 from tabulate import tabulate
 
-# Connect to SQLite databases
-conn_1000 = sqlite3.connect('1000.sqlite3')
-cursor_1000 = conn_1000.cursor()
+# Helper functions
+def random_string(length=10):
+    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
-conn_10000 = sqlite3.connect('10000.sqlite3')
-cursor_10000 = conn_10000.cursor()
+def setup_database(db_name):
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+    return conn, c
 
-conn_100000 = sqlite3.connect('100000.sqlite3')
-cursor_100000 = conn_100000.cursor()
+def add_worker(c, name=None):
+    worker_name = name if name else random_string()
+    c.execute("INSERT INTO myapp_workers (name, status, startwork, endwork) VALUES (?, ?, ?, ?)", (worker_name, random.choice(['фельдшер', 'медсестра', 'водитель']), '2024-05-29', '2024-05-29'))
+    c.connection.commit()
 
-# Function to perform search by primary key
-def search_by_primary_key(cursor):
+def add_workers_group(c, n):
+    for _ in range(n):
+        add_worker(c)
+
+def find_by_key(c, id):
+    c.execute("SELECT * FROM myapp_workers WHERE id = ?", (id,))
+    return c.fetchone()
+
+def find_by_non_key(c, name):
+    c.execute("SELECT * FROM myapp_workers WHERE name = ?", (name,))
+    return c.fetchone()
+
+def find_by_mask(c, mask):
+    c.execute("SELECT * FROM myapp_workers WHERE name LIKE ?", (mask,))
+    return c.fetchall()
+
+def update_worker_by_key(c, id):
+    c.execute("UPDATE myapp_workers SET name = ? WHERE id = ?", ("TEST", id))
+    c.connection.commit()
+
+def update_worker_by_non_key(c, name):
+    c.execute("UPDATE myapp_workers SET name = ? WHERE name = ?", ("TEST", name))
+    c.connection.commit()
+
+def delete_worker_by_key(c, id):
+    c.execute("DELETE FROM myapp_workers WHERE id = ?", (id,))
+    c.connection.commit()
+
+def delete_worker_by_non_key(c, name):
+    c.execute("DELETE FROM myapp_workers WHERE name = ?", (name,))
+    c.connection.commit()
+
+def delete_workers_group(c):
+    c.execute("DELETE FROM myapp_workers WHERE status = ?", ("фельдшер",))
+    c.connection.commit()
+
+# Compression functions
+def compression1(c, limit=200):
+
+    c.execute(f"CREATE TABLE temp_table AS SELECT * FROM myapp_workers EXCEPT SELECT * FROM myapp_workers LIMIT {limit}")
+    c.execute("DROP TABLE myapp_workers")
+    c.execute("ALTER TABLE temp_table RENAME TO myapp_workers")
+    c.execute('VACUUM')
+    c.connection.commit()
+
+def compression2(c):
+    c.execute("CREATE TABLE temp_table AS SELECT * FROM myapp_workers LIMIT 200")
+    c.execute("DROP TABLE myapp_workers")
+    c.execute("ALTER TABLE temp_table RENAME TO myapp_workers")
+    c.execute("VACUUM")
+    c.connection.commit()
+
+# Timing experiments
+def measure_time(func, *args, repetitions=100):
     total_time = 0
-    for _ in range(100):
-        random_id = random.randint(1, 1000)  # Generate random primary key
+    for _ in range(repetitions):
         start_time = time.time()
-        cursor.execute("SELECT * FROM myapp_workers WHERE id=?", (random_id,))
-        result = cursor.fetchone()  # Retrieve worker by primary key
+        func(*args)
         end_time = time.time()
         total_time += end_time - start_time
-    average_time = total_time / 100
-    return result, average_time
-
-# Function to perform search by non-primary key field
-def search_by_non_primary_key(cursor):
-    total_time = 0
-    for _ in range(100):
-        random_status = random.choice(['фельдшер', 'медсестра', 'водитель'])  # Generate random status
-        start_time = time.time()
-        cursor.execute("SELECT * FROM myapp_workers WHERE status=?", (random_status,))
-        result = cursor.fetchall()  # Retrieve workers by status
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return result, average_time
-
-# Function to perform search by mask
-def search_by_mask(cursor):
-    total_time = 0
-    for _ in range(100):
-        random_name_mask = f"%{random.choice(['a', 'e', 'i', 'o', 'u'])}%"  # Generate random name mask
-        start_time = time.time()
-        cursor.execute("SELECT * FROM myapp_workers WHERE name LIKE ?", (random_name_mask,))
-        result = cursor.fetchall()  # Retrieve workers by name mask
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return result, average_time
-
-# Function to add a single record
-def add_single_record(cursor):
-    total_time = 0
-    for _ in range(100):
-        start_time = time.time()
-        cursor.execute("INSERT INTO myapp_workers (name, status, startwork) VALUES (?, ?, ?)", ("New Worker", "фельдшер", "2024-05-29"))
-        cursor.connection.commit()
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
+    average_time = total_time / repetitions
     return average_time
 
-# Function to add a group of records
-def add_group_of_records(cursor):
-    total_time = 0
-    for _ in range(100):
-        start_time = time.time()
-        for _ in range(10):  # Perform 10 times
-            cursor.execute("INSERT INTO myapp_workers (name, status, startwork) VALUES (?, ?, ?)", ("New Worker", "медсестра", "2024-05-29"))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+def run_experiments(db_name):
+    conn, c = setup_database(db_name)
+    
+    # Prepopulate the database with some data
+    if db_name == '1000.sqlite3':
+        num_records = 1000
+    elif db_name == '10000.sqlite3':
+        num_records = 10000
+    elif db_name == '100000.sqlite3':
+        num_records = 100000
 
-# Function to update a record by primary key
-def update_by_primary_key(cursor):
-    total_time = 0
-    for _ in range(100):
-        random_id = random.randint(1, 1000)  # Generate random primary key
-        start_time = time.time()
-        cursor.execute("UPDATE myapp_workers SET name=? WHERE id=?", ("Updated Worker", random_id))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+    key_id = random.randint(1, num_records)  # Generate a random ID within the range of existing IDs
+    specific_name = "specific_name"
+    add_worker(c, specific_name)  # Add a specific worker for non-key and mask searches
+    mask = '%specific%'  # Adjust to match actual data
 
-# Function to update a record by non-primary key field
-def update_by_non_primary_key(cursor):
-    total_time = 0
-    for _ in range(100):
-        start_time = time.time()
-        cursor.execute("UPDATE myapp_workers SET name=? WHERE status=?", ("Updated Driver", "водитель"))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+    # Experiments
+    experiments = {
+        "Find by key": (find_by_key, c, key_id),
+        "Find by non-key": (find_by_non_key, c, specific_name),
+        "Find by mask": (find_by_mask, c, mask),
+        "Add record": (add_worker, c),
+        "Add group of records": (add_workers_group, c, 10),
+        "Update record by key": (update_worker_by_key, c, key_id),
+        "Update record by non-key": (update_worker_by_non_key, c, specific_name),
+        "Delete record by key": (delete_worker_by_key, c, key_id),
+        "Delete record by non-key": (delete_worker_by_non_key, c, specific_name),
+        "Delete group of records": (delete_workers_group, c),
+    }
 
-# Function to delete a record by primary key
-def delete_by_primary_key(cursor):
-    total_time = 0
-    for _ in range(100):
-        random_id = random.randint(1, 1000)  # Generate random primary key
-        start_time = time.time()
-        cursor.execute("DELETE FROM myapp_workers WHERE id=?", (random_id,))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+    
+    compression_experiments = {
+        "Vacuum DB after deletion of 200 records": (compression1, c, 200),
+        "Vacuum DB after leaving 200 records": (compression2, c),
+    }
 
-# Function to delete a record by non-primary key field
-def delete_by_non_primary_key(cursor):
-    total_time = 0
-    for _ in range(100):
-        start_time = time.time()
-        random_status = random.choice(['фельдшер', 'медсестра', 'водитель'])  # Generate random status
-        cursor.execute("DELETE FROM myapp_workers WHERE status=?", (random_status,))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+    results = {}
+    for name, params in experiments.items():
+        results[name] = measure_time(*params, repetitions=100)
 
-# Function to delete a group of records
-def delete_group_of_records(cursor):
-    total_time = 0
-    for _ in range(100):
-        start_time = time.time()
-        random_status = random.choice(['фельдшер', 'медсестра', 'водитель'])  # Generate random status
-        cursor.execute("DELETE FROM myapp_workers WHERE status=?", (random_status,))
-        cursor.connection.commit()  # Commit changes to the database
-        end_time = time.time()
-        total_time += end_time - start_time
-    average_time = total_time / 100
-    return average_time
+    for name, params in compression_experiments.items():
+        results[name] = measure_time(params[0], *params[1:], repetitions=1)
 
-# Perform operations and measure time for 1000.sqlite3
-operations_1000 = {
-    "Search by Primary Key": search_by_primary_key(cursor_1000),
-    "Search by Non-Primary Key": search_by_non_primary_key(cursor_1000),
-    "Search by Mask": search_by_mask(cursor_1000),
-    "Add Single Record": add_single_record(cursor_1000),
-    "Add Group of Records": add_group_of_records(cursor_1000),
-    "Update by Primary Key": update_by_primary_key(cursor_1000),
-    "Update by Non-Primary Key": update_by_non_primary_key(cursor_1000),
-    "Delete by Primary Key": delete_by_primary_key(cursor_1000),
-    "Delete by Non-Primary Key": delete_by_non_primary_key(cursor_1000),
-    "Delete Group of Records": delete_group_of_records(cursor_1000)
-}
+    conn.close()
+    return results
 
-# Perform operations and measure time for 10000.sqlite3
-operations_10000 = {
-    "Search by Primary Key": search_by_primary_key(cursor_10000),
-    "Search by Non-Primary Key": search_by_non_primary_key(cursor_10000),
-    "Search by Mask": search_by_mask(cursor_10000),
-    "Add Single Record": add_single_record(cursor_10000),
-    "Add Group of Records": add_group_of_records(cursor_10000),
-    "Update by Primary Key": update_by_primary_key(cursor_10000),
-    "Update by Non-Primary Key": update_by_non_primary_key(cursor_10000),
-    "Delete by Primary Key": delete_by_primary_key(cursor_10000),
-    "Delete by Non-Primary Key": delete_by_non_primary_key(cursor_10000),
-    "Delete Group of Records": delete_group_of_records(cursor_10000)
-}
+# Run experiments for each database
+databases = ['1000.sqlite3', '10000.sqlite3', '100000.sqlite3']
+all_results = {}
 
-# Perform operations and measure time for 100000.sqlite3
-operations_100000 = {
-    "Search by Primary Key": search_by_primary_key(cursor_100000),
-    "Search by Non-Primary Key": search_by_non_primary_key(cursor_100000),
-    "Search by Mask": search_by_mask(cursor_100000),
-    "Add Single Record": add_single_record(cursor_100000),
-    "Add Group of Records": add_group_of_records(cursor_100000),
-    "Update by Primary Key": update_by_primary_key(cursor_100000),
-    "Update by Non-Primary Key": update_by_non_primary_key(cursor_100000),
-    "Delete by Primary Key": delete_by_primary_key(cursor_100000),
-    "Delete by Non-Primary Key": delete_by_non_primary_key(cursor_100000),
-    "Delete Group of Records": delete_group_of_records(cursor_100000)
-}
+for db in databases:
+    all_results[db] = run_experiments(db)
 
-# Format and print results for 1000.sqlite3
-print("Results for 1000.sqlite3:")
-print(tabulate(operations_1000.items(), headers=["Operation", "Average Time"], tablefmt="fancy_grid"))
+# Format results
+table_headers = ["Operation", "1000.sqlite3", "10000.sqlite3", "100000.sqlite3"]
+table_data = []
 
-# Format and print results for 10000.sqlite3
-print("\nResults for 10000.sqlite3:")
-print(tabulate(operations_10000.items(), headers=["Operation", "Average Time"], tablefmt="fancy_grid"))
+operations = list(all_results['1000.sqlite3'].keys())
+for operation in operations:
+    row = [operation]
+    for db in databases:
+        row.append(f"{all_results[db][operation]:.6f}")
+    table_data.append(row)
 
-# Format and print results for 100000.sqlite3
-print("\nResults for 100000.sqlite3:")
-print(tabulate(operations_100000.items(), headers=["Operation", "Average Time"], tablefmt="fancy_grid"))
-
-# Close cursors and connections
-cursor_1000.close()
-conn_1000.close()
-
-cursor_10000.close()
-conn_10000.close()
-
-cursor_100000.close()
-conn_100000.close()
+print(tabulate(table_data, headers=table_headers, tablefmt='grid'))
